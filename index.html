@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ONE DAY DIARY</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ======================== -->
+  <!-- Splash Screen            -->
+  <!-- ======================== -->
+  <div id="splash" class="screen splash-screen">
+    <div class="splash-content">
+      <img src="images/name.png" alt="ONE DAY DIARY" class="splash-logo">
+      <img src="images/dog.png" alt="Dog" class="splash-dog">
+      <p class="splash-text">하루에 하나만, 오늘을 기록해요</p>
+    </div>
+  </div>
+
+  <!-- ======================== -->
+  <!-- App Container (SPA)      -->
+  <!-- ======================== -->
+  <div id="app" class="screen app-container hidden">
+
+    <!-- ====== 홈 (달력) ====== -->
+    <div id="page-home" class="page active">
+      <div class="home-top">
+        <h1 class="home-title">ONE DAY DIARY</h1>
+        <p class="home-subtitle">하루에 하나만, 오늘을 기록해요</p>
+      </div>
+      <div class="calendar-container">
+        <div class="calendar">
+          <p class="cal-year" id="calYear"></p>
+          <p class="cal-month" id="calMonth"></p>
+          <div class="cal-weekdays">
+            <span class="cal-weekday">SUN</span>
+            <span class="cal-weekday">MON</span>
+            <span class="cal-weekday">TUE</span>
+            <span class="cal-weekday">WED</span>
+            <span class="cal-weekday">THU</span>
+            <span class="cal-weekday">FRI</span>
+            <span class="cal-weekday">SAT</span>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <p class="cal-hint">오늘 날짜를 눌러 하루를 기록해요</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== 작성하기 ====== -->
+    <div id="page-write" class="page">
+      <div class="write-header">
+        <button class="write-back-btn" id="writeBackBtn">&#8592;</button>
+        <span class="write-header-title">오늘의 일기</span>
+        <button class="write-save-top-btn hidden" id="writeSaveTopBtn">+</button>
+      </div>
+      <div class="write-content">
+        <!-- 질문 영역 (이모티콘 자리) -->
+        <p class="write-question" id="writeQuestion">질문을 불러오는 중...</p>
+        <!-- 날짜 표시 -->
+        <p class="write-date-display" id="writeDateDisplay"></p>
+        <!-- 일기 입력 (작성 모드) -->
+        <textarea class="write-textarea" id="writeTextarea" placeholder="오늘 하루를 자유롭게 적어보세요..."></textarea>
+        <!-- 저장된 내용 표시 (조회 / 저장완료 모드) -->
+        <div class="write-view-box hidden" id="writeViewBox">
+          <p class="write-view-text" id="writeViewText"></p>
+        </div>
+        <!-- AI 코멘트 말풍선 (저장 후 / 조회 시) -->
+        <div class="write-comment-bubble hidden" id="writeCommentBubble">
+          <div class="bubble-header">
+            <span class="bubble-label" id="writeBubbleEmoji"></span>
+          </div>
+          <p class="bubble-text" id="writeCommentText"></p>
+        </div>
+        <!-- 홈으로 돌아가기 (저장 후 / 조회 시) -->
+        <button class="write-home-btn hidden" id="writeHomeBtn">홈으로 돌아가기</button>
+      </div>
+      <!-- 로딩 오버레이 -->
+      <div class="write-loading hidden" id="writeLoading">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">AI가 코멘트를 작성하고 있어요...</p>
+      </div>
+    </div>
+
+    <!-- ====== 히스토리 ====== -->
+    <div id="page-history" class="page">
+      <div class="write-header">
+        <button class="write-back-btn" id="historyBackBtn">&#8592;</button>
+        <span class="write-header-title">히스토리</span>
+        <span style="width:40px;"></span>
+      </div>
+      <div class="history-list" id="historyList">
+        <!-- JS에서 카드 생성 -->
+      </div>
+    </div>
+
+    <!-- ====== 설정 ====== -->
+    <div id="page-settings" class="page">
+      <div class="page-top-header">
+        <h2 class="page-top-title">설정</h2>
+        <p class="page-top-subtitle">앱 환경을 관리해요</p>
+      </div>
+      <div class="settings-content">
+        <!-- AI 코멘트 -->
+        <div class="settings-section">
+          <div class="settings-row">
+            <span class="settings-label">AI 코멘트</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="aiCommentToggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <p class="settings-hint">일기 저장 시 AI 코멘트를 생성해요</p>
+        </div>
+        <!-- 다크 모드 -->
+        <div class="settings-section">
+          <div class="settings-row">
+            <span class="settings-label">다크 모드</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="darkModeToggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <!-- 전체 기록 삭제 -->
+        <div class="settings-section settings-section-danger">
+          <div class="settings-row">
+            <span class="settings-label settings-danger-label">전체 기록 삭제</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="clearDataToggle">
+              <span class="toggle-slider toggle-slider-danger"></span>
+            </label>
+          </div>
+          <p class="settings-danger-hint">삭제된 데이터는 복구할 수 없습니다</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== 하단 네비게이션 (공유) ====== -->
+    <nav class="bottom-nav" id="bottomNav">
+      <button class="nav-item active" data-page="home">
+        <img src="images/home_button.png" alt="홈" class="nav-icon">
+        <span>홈</span>
+      </button>
+      <button class="nav-item" data-page="write">
+        <img src="images/pencil-button.png" alt="작성하기" class="nav-icon">
+        <span>작성하기</span>
+      </button>
+      <button class="nav-item" data-page="history">
+        <img src="images/clock_button.png" alt="히스토리" class="nav-icon">
+        <span>히스토리</span>
+      </button>
+      <button class="nav-item" data-page="settings">
+        <img src="images/setting_button.png" alt="설정" class="nav-icon">
+        <span>설정</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
