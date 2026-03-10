@@ -114,6 +114,29 @@
           </div>
           <p class="settings-hint">일기 저장 시 AI 코멘트를 생성해요</p>
         </div>
+        <!-- 알림 설정 -->
+        <div class="settings-section">
+          <div class="settings-row">
+            <span class="settings-label">알림</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="notificationToggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <p class="settings-hint">매일 지정한 시간에 일기를 알려드려요</p>
+          <div class="notification-time-row hidden" id="notificationTimeRow">
+            <span class="notification-time-label">알림 시간</span>
+            <div class="time-dropdown-wrap" id="timeDropdownWrap">
+              <button class="time-dropdown-btn" id="timePickerBtn">
+                <span id="timePickerDisplay">오전 9:00</span>
+                <svg class="time-chevron" id="timeChevron" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <div class="time-dropdown-list hidden" id="timeDropdownList"></div>
+            </div>
+          </div>
+        </div>
         <!-- 다크 모드 -->
         <div class="settings-section">
           <div class="settings-row">

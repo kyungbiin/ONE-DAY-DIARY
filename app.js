@@ -89,6 +89,7 @@ function getEmojiForEntry(entry) {
 let selectedYear = null;
 let selectedMonth = null;
 let selectedDay = null;
+let swRegistration = null;
 
 // ============================
 // [초기화] DOMContentLoaded
@@ -111,6 +112,18 @@ document.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('ai_comment_enabled') === 'false') {
     document.getElementById('aiCommentToggle').checked = false;
   }
+
+  // 알림 설정 복원
+  const notifEnabled = localStorage.getItem('notification_enabled') === 'true';
+  const notifTime = localStorage.getItem('notification_time') || '09:00';
+  document.getElementById('notificationToggle').checked = notifEnabled;
+  document.getElementById('timePickerDisplay').textContent = formatTimeDisplay(notifTime);
+  if (notifEnabled) {
+    document.getElementById('notificationTimeRow').classList.remove('hidden');
+  }
+
+  // Service Worker + 알림 초기화
+  initServiceWorker();
 
   // 2초 후 스플래시 → 앱 전환
   setTimeout(() => {
@@ -141,6 +154,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 설정 페이지 이벤트
   initSettings();
+
+  // 커스텀 타임피커 이벤트
+  initTimePicker();
 });
 
 // ========================================
@@ -676,6 +692,29 @@ function renderHistory() {
  * 설정 페이지 이벤트 초기화
  */
 function initSettings() {
+  // 알림 토글
+  document.getElementById('notificationToggle').addEventListener('change', async (e) => {
+    const enabled = e.target.checked;
+    const timeRow = document.getElementById('notificationTimeRow');
+
+    if (enabled) {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        e.target.checked = false;
+        alert('알림 권한이 필요합니다. 브라우저 설정에서 알림을 허용해주세요.');
+        return;
+      }
+      timeRow.classList.remove('hidden');
+      localStorage.setItem('notification_enabled', 'true');
+      const time = document.getElementById('notificationTime').value;
+      sendToServiceWorker({ type: 'START_NOTIFICATION', time });
+    } else {
+      timeRow.classList.add('hidden');
+      localStorage.setItem('notification_enabled', 'false');
+      sendToServiceWorker({ type: 'STOP_NOTIFICATION' });
+    }
+  });
+
   // AI 코멘트 토글
   document.getElementById('aiCommentToggle').addEventListener('change', (e) => {
     localStorage.setItem('ai_comment_enabled', e.target.checked.toString());
@@ -732,4 +771,152 @@ function formatDateStr(date) {
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+
+// ========================================
+// [알림 시간 드롭다운]
+// ========================================
+
+// 'HH:MM' → '오전/오후 H:MM' 표시 문자열
+function formatTimeDisplay(time24) {
+  const [hh, mm] = time24.split(':').map(Number);
+  const ampm = hh < 12 ? '오전' : '오후';
+  const h = hh % 12 === 0 ? 12 : hh % 12;
+  return `${ampm} ${h}:${String(mm).padStart(2, '0')}`;
+}
+
+// 30분 간격 시간 목록 생성 (오전 6:00 ~ 오후 11:30)
+function buildTimeOptions() {
+  const options = [];
+  for (let h = 6; h < 24; h++) {
+    options.push(`${String(h).padStart(2, '0')}:00`);
+    options.push(`${String(h).padStart(2, '0')}:30`);
+  }
+  return options; // 36개
+}
+
+function initTimePicker() {
+  const btn = document.getElementById('timePickerBtn');
+  const list = document.getElementById('timeDropdownList');
+  const options = buildTimeOptions();
+
+  // 목록 아이템 생성
+  const saved = localStorage.getItem('notification_time') || '09:00';
+  options.forEach(time24 => {
+    const item = document.createElement('div');
+    item.className = 'td-item' + (time24 === saved ? ' selected' : '');
+    item.textContent = formatTimeDisplay(time24);
+    item.dataset.val = time24;
+    item.addEventListener('click', () => selectTime(time24));
+    list.appendChild(item);
+  });
+
+  // 버튼 클릭 → 드롭다운 토글
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = !list.classList.contains('hidden');
+    if (isOpen) {
+      closeDropdown();
+    } else {
+      openDropdown();
+    }
+  });
+
+  // 바깥 클릭 → 닫기
+  document.addEventListener('click', () => closeDropdown());
+  list.addEventListener('click', (e) => e.stopPropagation());
+}
+
+function openDropdown() {
+  const btn = document.getElementById('timePickerBtn');
+  const list = document.getElementById('timeDropdownList');
+  btn.classList.add('open');
+  list.classList.remove('hidden');
+
+  // 현재 선택 항목으로 스크롤
+  const selected = list.querySelector('.td-item.selected');
+  if (selected) {
+    setTimeout(() => {
+      selected.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }, 0);
+  }
+}
+
+function closeDropdown() {
+  const btn = document.getElementById('timePickerBtn');
+  const list = document.getElementById('timeDropdownList');
+  btn.classList.remove('open');
+  list.classList.add('hidden');
+}
+
+function selectTime(time24) {
+  const list = document.getElementById('timeDropdownList');
+
+  // 선택 상태 업데이트
+  list.querySelectorAll('.td-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.val === time24);
+  });
+
+  // 저장 + 버튼 텍스트 갱신
+  localStorage.setItem('notification_time', time24);
+  document.getElementById('timePickerDisplay').textContent = formatTimeDisplay(time24);
+
+  if (localStorage.getItem('notification_enabled') === 'true') {
+    sendToServiceWorker({ type: 'START_NOTIFICATION', time: time24 });
+  }
+
+  closeDropdown();
+}
+
+// ========================================
+// [알림 / Service Worker]
+// ========================================
+
+/**
+ * Service Worker 등록 + 알림 스케줄 복원
+ */
+async function initServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+
+  try {
+    swRegistration = await navigator.serviceWorker.register('./sw.js');
+
+    // 알림이 활성화된 경우 SW에 타이머 시작 메시지 전송
+    if (localStorage.getItem('notification_enabled') === 'true') {
+      const time = localStorage.getItem('notification_time') || '09:00';
+      // SW가 ready 상태일 때 전송
+      const reg = await navigator.serviceWorker.ready;
+      if (reg.active) {
+        reg.active.postMessage({ type: 'START_NOTIFICATION', time });
+      }
+    }
+  } catch (err) {
+    console.warn('Service Worker 등록 실패:', err);
+  }
+}
+
+/**
+ * 알림 권한 요청
+ * @returns {Promise<boolean>} 허용 여부
+ */
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+
+  const result = await Notification.requestPermission();
+  return result === 'granted';
+}
+
+/**
+ * Service Worker에 메시지 전송
+ */
+async function sendToServiceWorker(message) {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    if (reg.active) reg.active.postMessage(message);
+  } catch (err) {
+    console.warn('SW 메시지 전송 실패:', err);
+  }
 }

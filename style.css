@@ -1022,3 +1022,159 @@ body.dark-mode .settings-danger-label {
 body.dark-mode .settings-danger-hint {
   color: #5a5a70;
 }
+
+/* ========================
+   알림 시간 드롭다운
+   ======================== */
+
+.notification-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e8e5e0;
+}
+
+.notification-time-label {
+  font-size: 14px;
+  color: #888;
+  letter-spacing: 0.5px;
+}
+
+/* 드롭다운 래퍼 */
+.time-dropdown-wrap {
+  position: relative;
+}
+
+/* 버튼 */
+.time-dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Gaegu', cursive;
+  font-size: 15px;
+  color: #555;
+  background: #f3f0eb;
+  border: 1.5px solid #e0dbd3;
+  border-radius: 10px;
+  padding: 6px 10px 5px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.time-dropdown-btn:hover {
+  background: #ede9e3;
+  border-color: #cdc8c0;
+}
+
+.time-dropdown-btn.open {
+  background: #ede9e3;
+  border-color: #a3c7ed;
+  color: #2c2c2c;
+}
+
+.time-chevron {
+  color: #aaa;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.time-dropdown-btn.open .time-chevron {
+  transform: rotate(180deg);
+  color: #a3c7ed;
+}
+
+/* 드롭다운 목록 */
+.time-dropdown-list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  width: 140px;
+  background: #faf9f6;
+  border: 1.5px solid #e0dbd3;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 100;
+  scrollbar-width: none;
+  animation: dropDown 0.18s ease;
+}
+
+.time-dropdown-list::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes dropDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 드롭다운 아이템 */
+.td-item {
+  font-family: 'Gaegu', cursive;
+  font-size: 15px;
+  color: #555;
+  padding: 9px 14px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.12s;
+  border-bottom: 1px solid #f0ede8;
+}
+
+.td-item:last-child {
+  border-bottom: none;
+}
+
+.td-item:hover {
+  background: #f3f0eb;
+}
+
+.td-item.selected {
+  color: #2c2c2c;
+  font-weight: 700;
+  background: rgba(163, 199, 237, 0.15);
+}
+
+/* 다크모드 */
+body.dark-mode .notification-time-row {
+  border-top-color: #3a3a50;
+}
+
+body.dark-mode .notification-time-label {
+  color: #6b6b80;
+}
+
+body.dark-mode .time-dropdown-btn {
+  background: #2a2a3a;
+  border-color: #3a3a50;
+  color: #c0bdb8;
+}
+
+body.dark-mode .time-dropdown-btn:hover,
+body.dark-mode .time-dropdown-btn.open {
+  background: #323248;
+  border-color: #6a99c0;
+}
+
+body.dark-mode .time-dropdown-list {
+  background: #1e1e2e;
+  border-color: #3a3a50;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .td-item {
+  color: #a0a0b8;
+  border-bottom-color: #2e2e40;
+}
+
+body.dark-mode .td-item:hover {
+  background: #2a2a3a;
+}
+
+body.dark-mode .td-item.selected {
+  color: #e8e4e0;
+  background: rgba(106, 153, 192, 0.2);
+}
